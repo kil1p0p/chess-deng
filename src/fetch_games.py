@@ -22,15 +22,12 @@ from datetime import date
 import requests
 
 
-# 🔧 CONFIG: CHANGE THIS TO YOUR USERNAME
-USERNAME = "audi0s1ave".lower()  # e.g. "audi0s1ave"
+USERNAME = "AlekhSrivastava".lower()  # e.g. "audi0s1ave"
 
-# First year you want to fetch from
 START_YEAR = 2025
 
 BASE_URL = "https://api.chess.com/pub/player"
 
-# Chess.com requires a meaningful User-Agent
 HEADERS = {
     "User-Agent": "chess-improvement-engine/0.1 (contact: nikhilundead@gmail.com)"
 }
@@ -53,7 +50,6 @@ def fetch_month(username: str, year: int, month: int) -> Optional[Dict[str, Any]
         return None
 
     if resp.status_code == 404:
-        # No archive / no games for that month → just skip
         print(f"[INFO] No games or archive for {year}-{month:02d} (404).")
         return None
 
@@ -104,32 +100,35 @@ def already_downloaded(raw_dir: Path, year: int, month: int) -> bool:
     return path.exists() and path.stat().st_size > 0
 
 
-def main():
-    username = USERNAME
-    if username == "your_chesscom_username":
-        print(
-            "[ERROR] Please edit fetch_games.py and set USERNAME to your "
-            "actual chess.com username."
-        )
-        sys.exit(1)
-
-    # Allow username override via CLI: python fetch_games.py someuser
-    if len(sys.argv) >= 2:
-        username = sys.argv[1].lower()
-
+def fetch_games_for_user(username: str, start_year: int = START_YEAR, start_month: int = 1, end_year: Optional[int] = None, end_month: Optional[int] = None) -> None:
+    """
+    Fetch games for a given user from start_year/month to end_year/month.
+    """
     project_root = Path(__file__).resolve().parent
-    raw_dir = project_root / "data" / "raw"
+    raw_dir = project_root / "data" / "raw" / username
     raw_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"[INFO] Fetching games for user: {username}")
     print(f"[INFO] Saving NDJSON files under: {raw_dir}")
 
     today = date.today()
+    if end_year is None:
+        end_year = today.year
+    if end_month is None:
+        end_month = today.month if end_year == today.year else 12
+
     total_fetched = 0
 
-    for year in range(START_YEAR, today.year + 1):
-        last_month = today.month if year == today.year else 12
-        for month in range(1, last_month + 1):
+    for year in range(start_year, end_year + 1):
+        # Determine month range for this year
+        first_m = start_month if year == start_year else 1
+        last_m = end_month if year == end_year else 12
+        
+        # Cap at current month if we are in the current year
+        if year == today.year:
+            last_m = min(last_m, today.month)
+
+        for month in range(first_m, last_m + 1):
             if already_downloaded(raw_dir, year, month):
                 print(f"[SKIP] {year}-{month:02d} already downloaded.")
                 continue
@@ -145,6 +144,22 @@ def main():
             time.sleep(0.5)
 
     print(f"[DONE] Finished. Total games fetched (approx): {total_fetched}")
+
+
+def main():
+    username = USERNAME
+    if username == "your_chesscom_username":
+        print(
+            "[ERROR] Please edit fetch_games.py and set USERNAME to your "
+            "actual chess.com username."
+        )
+        sys.exit(1)
+
+    # Allow username override via CLI: python fetch_games.py someuser
+    if len(sys.argv) >= 2:
+        username = sys.argv[1].lower()
+    
+    fetch_games_for_user(username)
 
 
 if __name__ == "__main__":

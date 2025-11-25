@@ -28,7 +28,7 @@ import chess.pgn
 
 
 # 🔧 CONFIG: set this to your chess.com username (same as in fetch_games.py)
-USERNAME = "audi0s1ave".lower()  # change if needed
+USERNAME = "AlekhSrivastava".lower()  # change if needed
 
 
 def parse_result_tag(tag: Optional[str]) -> str:
@@ -242,18 +242,17 @@ def load_all_raw_games(raw_dir: Path, username: str) -> List[Dict[str, Any]]:
     return rows
 
 
-def main():
-    if USERNAME == "your_chesscom_username":
-        print("[ERROR] Please set USERNAME at the top of process_games.py.")
-        return
-
+def process_all_games(username: str) -> None:
+    """
+    Process all raw games for the given username and save to Parquet.
+    """
     project_root = Path(__file__).resolve().parent
-    raw_dir = project_root / "data" / "raw"
-    warehouse_dir = project_root / "data" / "warehouse"
+    raw_dir = project_root / "data" / "raw" / username
+    warehouse_dir = project_root / "data" / "warehouse" / username
     warehouse_dir.mkdir(parents=True, exist_ok=True)
     out_path = warehouse_dir / "games.parquet"
 
-    rows = load_all_raw_games(raw_dir, USERNAME.lower())
+    rows = load_all_raw_games(raw_dir, username)
     if not rows:
         print("[WARN] No games parsed. Exiting.")
         return
@@ -273,6 +272,14 @@ def main():
     # Save to Parquet
     df.to_parquet(out_path, index=False)
     print(f"[DONE] Wrote {len(df)} games to {out_path}")
+
+
+def main():
+    if USERNAME == "your_chesscom_username":
+        print("[ERROR] Please set USERNAME at the top of process_games.py.")
+        return
+
+    process_all_games(USERNAME.lower())
 
 
 if __name__ == "__main__":
