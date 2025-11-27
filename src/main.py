@@ -1,8 +1,8 @@
 import streamlit as st
-from pages.landing import render_landing_page
-from pages.profile_stats import render_profile_stats
-from pages.analyse_game import render_analyse_game
-from pages.chess_coach import render_chess_coach
+from views.landing import render_landing_page
+from views.profile_stats import render_profile_stats
+from views.analyse_game import render_analyse_game
+from views.chess_coach import render_chess_coach
 
 st.set_page_config(page_title="Chess Analyzer", layout="wide", initial_sidebar_state="collapsed")
 
